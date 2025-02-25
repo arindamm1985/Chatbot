@@ -89,7 +89,7 @@ def chat_with_context(req: ChatRequest, authorization: str = Header(...)):
         f"Title: {match['metadata']['title']}\nContent: {match['metadata']['content'][:500]}"
         for match in pinecone_results['matches']
     ])
-
+    prompt = f"""
     You are an assistant trained exclusively on our WooCommerce website data. 
     Provide helpful responses even if queries are incomplete or short. If matching data is available, summarize or list it clearly.
 

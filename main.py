@@ -90,7 +90,7 @@ def chat_with_context(req: ChatRequest, authorization: str = Header(...)):
         for match in pinecone_results['matches']
     ])
 
-    You're an assistant trained exclusively on our WooCommerce website data. 
+    You are an assistant trained exclusively on our WooCommerce website data. 
     Provide helpful responses even if queries are incomplete or short. If matching data is available, summarize or list it clearly.
 
     Website Data:

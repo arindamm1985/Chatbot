@@ -1,45 +1,97 @@
-from fastapi import FastAPI, HTTPException, Header
-from pydantic import BaseModel
+from fastapi import FastAPI, Header, HTTPException
+from pinecone import Pinecone
 import openai
-import pinecone
+import os
+from dotenv import load_dotenv
+from pydantic import BaseModel
+
+load_dotenv()
+
+# Environment Variables
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+PINECONE_API_KEY = os.getenv("PINECONE_API_KEY")
+INDEX_NAME = "woocommerce-chatbot"
+
+# Initialize Clients
+openai.api_key = openai_key = os.getenv("OPENAI_API_KEY")
+pc = Pinecone(api_key=os.getenv("PINECONE_API_KEY"))
+index = pc.Index("woocommerce-chatbot")
 
 app = FastAPI()
 
-openai.api_key = "OPENAI_API_KEY"
-pinecone.init(api_key="PINECONE_KEY", environment="PINECONE_ENV")
-index = pinecone.Index("your-index-name")
+# Request Models
+class EmbedRequest(BaseModel):
+    client_id: str
+    content_id: str
+    title: str
+    content: str
 
 class ChatRequest(BaseModel):
     client_id: str
     query: str
 
-@app.post("/api/chat")
-def handle_chat(req: ChatRequest, authorization: str = Header(...)):
-    # Validate client_id and authorization token here
+# API Root
+@app.get("/")
+async def root():
+    return {"status": "API is live!"}
 
-    embedding_response = openai.Embedding.create(
-        input=req.query,
+# Endpoint to Embed and Upsert content (from client WP plugin)
+@app.post("/api/embed")
+async def embed_content(req: EmbedRequest, authorization: str = Header(...)):
+    # Validate API Key / Authorization here...
+
+    embedding_resp = openai.Embedding.create(
+        input=f"{req.title}. {req.content}",
         model="text-embedding-ada-002"
     )
 
-    embedding = embedding_response['data'][0]['embedding']
+    embedding = embedding_resp['data'][0]['embedding']
 
-    result = index.query(
-        vector=embedding,
+    index.upsert(
+        vectors=[
+            {
+                "id": f"{req.client_id}-{req.content_id}",
+                "values": embedding,
+                "metadata": {
+                    "title": req.title,
+                    "content": req.content[:1000]  # Limit to reasonable size
+                }
+            }
+        ],
+        namespace=req.client_id  # each client has its own namespace
+    )
+
+    return {"success": True, "message": "Content indexed successfully."}
+
+@app.post("/api/chat")
+def chat_with_context(req: ChatRequest, authorization: str = Header(...)):
+    # Validate API Key / Authorization here...
+
+    query_embedding = openai.Embedding.create(
+        input=req.query,
+        model="text-embedding-ada-002"
+    )['data'][0]['embedding']
+
+    pinecone_results = index.query(
+        vector=query_embedding,
         top_k=3,
-        namespace=req.client_id,  # use namespaces per client
+        namespace=req.client_id,
         include_metadata=True
     )
 
     context = "\n---\n".join([
-        f"{m['metadata']['title']}:\n{m['metadata']['content'][:500]}"
-        for m in result.matches
+        f"Title: {match['metadata']['title']}\nContent: {match['metadata']['content'][:500]}"
+        for match in pinecone_result['matches']
     ])
 
     prompt = f"""
-    Answer only based on the provided context:
+    You're an assistant trained exclusively on the WooCommerce website data provided.
+    Answer only based on the provided context below. If the answer isn't clearly found, politely respond:
+    'I'm sorry, but I can't answer that question based on our website data.'
+
+    Website Data:
     {context}
-    
+
     User Question: {req.query}
     """
 
@@ -53,3 +105,7 @@ def handle_chat(req: ChatRequest, authorization: str = Header(...)):
         "success": True,
         "response": chat_response['choices'][0]['message']['content'].strip()
     }
+
+@app.get("/")
+async def root():
+    return {"message": "API running successfully!"}

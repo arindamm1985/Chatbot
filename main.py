@@ -2,6 +2,7 @@ from fastapi import FastAPI, Header, HTTPException
 from pinecone import Pinecone
 import openai
 import os
+import uvicorn
 from dotenv import load_dotenv
 from pydantic import BaseModel
 

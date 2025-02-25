@@ -90,15 +90,13 @@ def chat_with_context(req: ChatRequest, authorization: str = Header(...)):
         for match in pinecone_results['matches']
     ])
 
-    prompt = f"""
-    You're an assistant trained exclusively on the WooCommerce website data provided.
-    Answer only based on the provided context below. If the answer isn't clearly found, politely respond:
-    'I'm sorry, but I can't answer that question based on our website data.'
+    You're an assistant trained exclusively on our WooCommerce website data. 
+    Provide helpful responses even if queries are incomplete or short. If matching data is available, summarize or list it clearly.
 
     Website Data:
     {context}
 
-    User Question: {req.query}
+    User Question or Phrase: {req.query}
     """
 
     chat_response = openai_client.chat.completions.create(

@@ -44,7 +44,7 @@ if __name__ == "__main__":
 async def embed_content(req: EmbedRequest, authorization: str = Header(...)):
     # Validate API Key / Authorization here...
 
-      embedding_resp = openai_client.embeddings.create(
+    embedding_resp = openai_client.embeddings.create(
         input=f"{req.title}. {req.content}",
         model="text-embedding-ada-002"
     )

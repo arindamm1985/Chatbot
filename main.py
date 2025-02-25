@@ -87,7 +87,7 @@ def chat_with_context(req: ChatRequest, authorization: str = Header(...)):
 
     context = "\n---\n".join([
         f"Title: {match['metadata']['title']}\nContent: {match['metadata']['content'][:500]}"
-        for match in pinecone_result['matches']
+        for match in pinecone_results['matches']
     ])
 
     prompt = f"""

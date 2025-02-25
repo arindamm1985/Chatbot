@@ -101,15 +101,18 @@ def chat_with_context(req: ChatRequest, authorization: str = Header(...)):
     User Question: {req.query}
     """
 
-    chat_response = openai.ChatCompletion.create(
+  chat_response = openai_client.chat.completions.create(
         model="gpt-3.5-turbo",
         messages=[{"role": "user", "content": prompt}],
         temperature=0
     )
 
+    # Corrected response extraction
+    answer = chat_response.choices[0].message.content.strip()
+
     return {
         "success": True,
-        "response": chat_response['choices'][0]['message']['content'].strip()
+        "response": answer
     }
 
 @app.get("/")

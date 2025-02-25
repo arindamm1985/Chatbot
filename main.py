@@ -114,7 +114,8 @@ def chat_with_context(req: ChatRequest, authorization: str = Header(...)):
         "success": True,
         "response": answer,
         "client_id": req.client_id,
-        "query": req.query
+        "query": req.query,
+        "context": context
     }
 
 @app.get("/")

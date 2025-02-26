@@ -43,9 +43,6 @@ async def embed_content(req: EmbedRequest):
     if not req.data:
         raise HTTPException(status_code=400, detail="No data provided")
 
-    # ✅ Step 1: Delete existing namespace before inserting new data
-    index.delete(delete_all=True, namespace=req.client_id)
-
     vectors = []
     for item in req.data:
         content_str = f"Title: {item['title']}, Content: {item['content']}, URL: {item['url']}"

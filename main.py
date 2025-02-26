@@ -145,25 +145,23 @@ def chat_with_context(req: ChatRequest, authorization: str = Header(...)):
 ])
 
     prompt = f"""
-    You are an assistant trained exclusively on our WooCommerce website data. 
-    Provide helpful responses even if queries are incomplete or short. If matching data is available, summarize or list it clearly.
-    Each record has the following fields.
-    title,
-    url,
-    content,
-    featured_image,
-    short_description,
-    categories,
-    tags,
-    variations,
-    shipping,
-    payment
-    If the matching data has categories that is not empty, it means its a product. Try to return featured_image and url in a separate format along with the answer.
+    You are an AI assistant trained exclusively on our WooCommerce website data.  
+    Your goal is to provide direct and helpful responses based on the available data.  
 
-    Website Data:
-    {context}
+    ### **Response Guidelines:**
+    - If **matching data is found**, return only the relevant response.  
+    - If the data includes a **product** (determined by a non-empty `categories` field),  
+    include an **HTML-rendered image (`medium` size) and a clickable link**.
+    - Otherwise, provide just the answer.  
 
-    User Question or Phrase: {req.query}
+    ### **Response Format for Products:**
+    If the query matches a product, structure the response as follows:  
+
+    ```html
+    {response_text}  
+    <img src="{featured_image}" width="300px" alt="{title}" />  
+    <a href="{url}" target="_blank">Click here</a>
+
     """
 
     chat_response = openai_client.chat.completions.create(

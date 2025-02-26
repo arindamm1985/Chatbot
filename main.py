@@ -149,10 +149,13 @@ def chat_with_context(req: ChatRequest, authorization: str = Header(...)):
     Your goal is to provide direct and helpful responses based on the available data.  
 
     ### **Response Guidelines:**
-    - If **matching data is found**, return only the relevant response.  
-    - If the data includes a **product** (determined by a non-empty `categories` field),  
-    include an **HTML-rendered image (`medium` size) and a clickable link**.
-    - Otherwise, provide just the answer.  
+    - If the query matches a **product**, return the **response, image, and link**.
+    - If the query is general, return a **concise response**.
+    - If no relevant data is found, respond with:  
+    *"I'm sorry, but I couldn't find relevant information based on our website data."*
+
+    ### **Available Data:**  
+    {context}
 
     ### **Response Format for Products:**
     If the query matches a product, structure the response as follows:  

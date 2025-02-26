@@ -158,9 +158,9 @@ def chat_with_context(req: ChatRequest, authorization: str = Header(...)):
     If the query matches a product, structure the response as follows:  
 
     ```html
-    {response_text}  
-    <img src="{featured_image}" width="300px" alt="{title}" />  
-    <a href="{url}" target="_blank">Click here</a>
+    ***response***
+    <img src="https://example.com/red-sneakers-medium.jpg" width="300px" alt="Red Sneakers" />
+    <a href="https://example.com/red-sneakers" target="_blank">Click here</a>
 
     """
 

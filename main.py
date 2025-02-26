@@ -41,31 +41,65 @@ if __name__ == "__main__":
 
 # Endpoint to Embed and Upsert content (from client WP plugin)
 @app.post("/api/embed")
-async def embed_content(req: EmbedRequest, authorization: str = Header(...)):
-    # Validate API Key / Authorization here...
+async def embed_content(req: EmbedRequest):
+    if not req.data:
+        raise HTTPException(status_code=400, detail="No data provided")
 
-    embedding_resp = openai_client.embeddings.create(
-        input=f"{req.title}. {req.content}",
-        model="text-embedding-ada-002"
-    )
+    # ✅ Step 1: Delete existing namespace before inserting new data
+    index.delete(delete_all=True, namespace=req.client_id)
 
-    embedding = embedding_resp.data[0].embedding
+    vectors = []
+    for item in req.data:
+        content_str = f"Title: {item['title']}, Content: {item['content']}, URL: {item['url']}"
 
-    index.upsert(
-        vectors=[
-            {
-                "id": f"{req.client_id}-{req.content_id}",
-                "values": embedding,
-                "metadata": {
-                    "title": req.title,
-                    "content": req.content[:1000]  # Limit to reasonable size
-                }
+        if 'short_description' in item:
+            content_str += f", Short Description: {item['short_description']}"
+
+        if 'categories' in item:
+            content_str += f", Categories: {item['categories']}"
+
+        if 'tags' in item:
+            content_str += f", Tags: {item['tags']}"
+
+        if 'variations' in item:
+            variations = "; ".join([
+                f"Variation {i+1}: " + ", ".join([f"{k}: {v}" for k, v in var['attributes'].items()]) + f" - Price: {var['price']}"
+                for i, var in enumerate(item['variations'])
+            ])
+            content_str += f", Variations: {variations}"
+
+        if 'shipping' in item:
+            content_str += f", Shipping: {item['shipping']}"
+
+        if 'payment' in item:
+            content_str += f", Payment Methods: {item['payment']}"
+
+        embedding = openai_client.embeddings.create(
+            input=content_str,
+            model="text-embedding-ada-002"
+        ).data[0].embedding
+
+        vectors.append({
+            "id": item["id"],
+            "values": embedding,
+            "metadata": {
+                "title": item["title"],
+                "url": item["url"],
+                "content": item["content"],
+                "featured_image": item.get("featured_image", ""),
+                "short_description": item.get("short_description", ""),
+                "categories": item.get("categories", ""),
+                "tags": item.get("tags", ""),
+                "variations": item.get("variations", []),
+                "shipping": item.get("shipping", ""),
+                "payment": item.get("payment", "")
             }
-        ],
-        namespace=req.client_id  # each client has its own namespace
-    )
+        })
 
-    return {"success": True, "message": "Content indexed successfully."}
+    # ✅ Step 2: Store fresh data in Pinecone
+    index.upsert(vectors=vectors, namespace=req.client_id)
+
+    return {"success": True, "message": "Namespace cleared and new data embedded successfully"}
 
 @app.post("/api/chat")
 def chat_with_context(req: ChatRequest, authorization: str = Header(...)):

@@ -23,9 +23,7 @@ app = FastAPI()
 # Request Models
 class EmbedRequest(BaseModel):
     client_id: str
-    content_id: str
-    title: str
-    content: str
+    data: list
 
 class ChatRequest(BaseModel):
     client_id: str

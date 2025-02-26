@@ -85,7 +85,7 @@ async def embed_content(req: EmbedRequest):
                 "short_description": item.get("short_description", ""),
                 "categories": item.get("categories", ""),
                 "tags": item.get("tags", ""),
-                "variations": item.get("variations", []),
+                "variations": item.get("variations", ""),
                 "shipping": item.get("shipping", ""),
                 "payment": item.get("payment", "")
             }

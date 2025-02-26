@@ -57,11 +57,7 @@ async def embed_content(req: EmbedRequest):
             content_str += f", Tags: {item['tags']}"
 
         if 'variations' in item:
-            variations = "; ".join([
-                f"Variation {i+1}: " + ", ".join([f"{k}: {v}" for k, v in var['attributes'].items()]) + f" - Price: {var['price']}"
-                for i, var in enumerate(item['variations'])
-            ])
-            content_str += f", Variations: {variations}"
+            content_str += f", Variations: {item['variations']}"
 
         if 'shipping' in item:
             content_str += f", Shipping: {item['shipping']}"

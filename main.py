@@ -156,8 +156,6 @@ def chat_with_context(req: ChatRequest, authorization: str = Header(...)):
 
     ### **Response Format for Products:**
     If the query matches a product, structure the response as follows:  
-
-    ```html
     ***response***
     <img src="https://example.com/red-sneakers-medium.jpg" width="300px" alt="Red Sneakers" />
     <a href="https://example.com/red-sneakers" target="_blank">Click here</a>
@@ -178,7 +176,8 @@ def chat_with_context(req: ChatRequest, authorization: str = Header(...)):
         "response": answer,
         "client_id": req.client_id,
         "query": req.query,
-        "context": context
+        "context": context,
+        "improved_query": improved_query
     }
 
 @app.get("/")

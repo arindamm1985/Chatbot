@@ -91,13 +91,35 @@ async def embed_content(req: EmbedRequest):
     index.upsert(vectors=vectors, namespace=req.client_id)
 
     return {"success": True, "message": "Namespace cleared and new data embedded successfully"}
+    
+def rewrite_query(original_query):
+    """
+    Uses GPT-4 to rewrite the query to make it more contextually rich.
+    """
+    rewrite_prompt = f"""
+    You are an AI assistant optimizing user queries for a vector search database. 
+    Rewrite the following query to be more specific and include relevant keywords:
+    Each record of this database is either product,post,or page.
+
+    Original query: "{original_query}"
+    Improved search query:
+    """
+    
+    chat_response = openai_client.chat.completions.create(
+        model="gpt-4",
+        messages=[{"role": "user", "content": rewrite_prompt}],
+        temperature=0
+    )
+
+    return chat_response.choices[0].message.content.strip()
 
 @app.post("/api/chat")
 def chat_with_context(req: ChatRequest, authorization: str = Header(...)):
     # Validate API Key / Authorization here...
-
+    improved_query = rewrite_query(req.query)
+    
     query_embedding_resp = openai_client.embeddings.create(
-        input=req.query,
+        input=improved_query,
         model="text-embedding-ada-002"
     )
 
@@ -111,12 +133,32 @@ def chat_with_context(req: ChatRequest, authorization: str = Header(...)):
     )
 
     context = "\n---\n".join([
-        f"Title: {match['metadata']['title']}\nContent: {match['metadata']['content'][:500]}"
-        for match in pinecone_results['matches']
-    ])
+    f"Title: {match['metadata']['title']}\n"
+    f"Content: {match['metadata']['content'][:500]}\n"
+    f"Short Description: {match['metadata'].get('short_description', 'N/A')}\n"
+    f"Categories: {match['metadata'].get('categories', 'N/A')}\n"
+    f"Tags: {match['metadata'].get('tags', 'N/A')}\n"
+    f"Variations: {match['metadata'].get('variations', 'N/A')}\n"
+    f"Shipping Options: {match['metadata'].get('shipping', 'N/A')}\n"
+    f"Payment Methods: {match['metadata'].get('payment', 'N/A')}"
+    for match in pinecone_results['matches']
+])
+
     prompt = f"""
     You are an assistant trained exclusively on our WooCommerce website data. 
     Provide helpful responses even if queries are incomplete or short. If matching data is available, summarize or list it clearly.
+    Each record has the following fields.
+    title,
+    url,
+    content,
+    featured_image,
+    short_description,
+    categories,
+    tags,
+    variations,
+    shipping,
+    payment
+    If the matching data has categories that is not empty, it means its a product. Try to return featured_image and url in a separate format along with the answer.
 
     Website Data:
     {context}

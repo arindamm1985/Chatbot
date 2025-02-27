@@ -37,6 +37,21 @@ async def root():
 if __name__ == "__main__":
     uvicorn.run("main:app", host="0.0.0.0", port=int(os.getenv("PORT", 10000)))
 
+class EmptyNamespaceRequest(BaseModel):
+    client_id: str
+
+@app.post("/api/empty-namespace")
+def empty_pinecone_namespace(request: EmptyNamespaceRequest):
+    try:
+        namespace = request.client_id
+
+        # ✅ Delete all vectors from the specified namespace
+        index.delete(delete_all=True, namespace=namespace)
+
+        return {"success": True, "message": f"Namespace '{namespace}' has been emptied."}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+        
 # Endpoint to Embed and Upsert content (from client WP plugin)
 @app.post("/api/embed")
 async def embed_content(req: EmbedRequest):

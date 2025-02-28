@@ -97,11 +97,7 @@ async def api_extract(req: ExtractRequest):
     if not url:
         raise HTTPException(status_code=400, detail="No URL provided.")
     
-    
-        extracted_data = extract_sections(url)
-    
-    
-    return extracted_data
+    return extract_sections(url)
 @app.post("/api/empty-namespace")
 def empty_pinecone_namespace(request: EmptyNamespaceRequest):
     try:

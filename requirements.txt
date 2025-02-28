@@ -5,3 +5,4 @@ pinecone
 python-dotenv
 requests
 pydantic
+bs4

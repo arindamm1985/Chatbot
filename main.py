@@ -24,7 +24,8 @@ app = FastAPI()
 class EmbedRequest(BaseModel):
     client_id: str
     data: list
-
+class ExtractRequest(BaseModel):
+    url: str
 class ChatRequest(BaseModel):
     client_id: str
     query: str
@@ -88,9 +89,9 @@ def extract_sections(url):
     
     return {"sections": sections}
 
-@app.route('/api/extract', methods=['GET'])
-def api_extract():
-    url = request.args.get('url')
+@app.post('/api/extract')
+async def api_extract(req: ExtractRequest):
+    url = req.url
     if not url:
         return jsonify({"error": "No URL provided."}), 400
 

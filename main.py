@@ -39,7 +39,67 @@ if __name__ == "__main__":
 
 class EmptyNamespaceRequest(BaseModel):
     client_id: str
+def extract_sections(url):
+    # Fetch the page content
+    response = requests.get(url)
+    response.raise_for_status()
+    html = response.text
 
+    # Parse the HTML with BeautifulSoup
+    soup = BeautifulSoup(html, 'html.parser')
+    
+    # Remove header, footer, and logo (if present)
+    for tag in soup.find_all(["header", "footer"]):
+        tag.decompose()
+    logo = soup.find('img', id='logo')
+    if logo:
+        logo.decompose()
+    
+    # Use the <main> tag if available; otherwise, fall back to the body.
+    main_content = soup.find('main') or soup.body
+
+    sections = []
+    # Iterate over direct children that are either <div> or <section>
+    for container in main_content.find_all(['div', 'section'], recursive=False):
+        section_data = {}
+        # Extract the section title (first heading element found)
+        title_tag = container.find(['h1', 'h2', 'h3', 'h4', 'h5', 'h6'])
+        section_data['title'] = title_tag.get_text(strip=True) if title_tag else ""
+        
+        # Extract immediate paragraph text as the section's content
+        paragraphs = container.find_all('p', recursive=False)
+        section_data['content'] = " ".join(p.get_text(strip=True) for p in paragraphs)
+        
+        # Extract nested child containers (div or section) that contain a heading or paragraph
+        child_sections = []
+        for child in container.find_all(['div', 'section'], recursive=False):
+            if child.find(['h1', 'h2', 'h3', 'h4', 'h5', 'h6']) or child.find('p'):
+                child_data = {}
+                child_title = child.find(['h1', 'h2', 'h3', 'h4', 'h5', 'h6'])
+                child_data['title'] = child_title.get_text(strip=True) if child_title else ""
+                child_paragraphs = child.find_all('p', recursive=False)
+                child_data['content'] = " ".join(p.get_text(strip=True) for p in child_paragraphs)
+                child_sections.append(child_data)
+        section_data['child_sections'] = child_sections
+        
+        # Include the container if it has any title, content, or child sections
+        if section_data['title'] or section_data['content'] or child_sections:
+            sections.append(section_data)
+    
+    return {"sections": sections}
+
+@app.route('/api/extract', methods=['GET'])
+def api_extract():
+    url = request.args.get('url')
+    if not url:
+        return jsonify({"error": "No URL provided."}), 400
+
+    try:
+        extracted_data = extract_sections(url)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+    return jsonify(extracted_data)
 @app.post("/api/empty-namespace")
 def empty_pinecone_namespace(request: EmptyNamespaceRequest):
     try:

@@ -97,10 +97,9 @@ async def api_extract(req: ExtractRequest):
     if not url:
         raise HTTPException(status_code=400, detail="No URL provided.")
     
-    try:
+    
         extracted_data = extract_sections(url)
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    
     
     return extracted_data
 @app.post("/api/empty-namespace")

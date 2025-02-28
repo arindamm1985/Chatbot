@@ -39,7 +39,7 @@ if __name__ == "__main__":
     uvicorn.run("main:app", host="0.0.0.0", port=int(os.getenv("PORT", 10000)))
 
 class EmptyNamespaceRequest(BaseModel):
-    client_id: str
+    client_id: str 
 def extract_sections(url):
     # Fetch the page content
     response = requests.get(url)

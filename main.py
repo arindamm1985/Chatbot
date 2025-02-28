@@ -5,7 +5,7 @@ import os
 import uvicorn
 from dotenv import load_dotenv
 from pydantic import BaseModel 
-
+from bs4 import BeautifulSoup
 load_dotenv()
 
 # Environment Variables

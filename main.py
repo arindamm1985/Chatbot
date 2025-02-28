@@ -237,45 +237,85 @@ def chat_with_context(req: ChatRequest, authorization: str = Header(...)):
     prompt = f"""
     You are an AI Sales Assistant with deep knowledge of our WooCommerce store data. Your mission is to help customers, drive sales, and encourage purchases.
 
-    **Enhanced Query Context:**  
-    The user's query has been optimized with targeted keywords and phrases to improve search accuracy. You may encounter several types of inquiries, including:
+    For each user query, follow these instructions:
+    1. First, provide a concise plain-text answer that directly addresses the query.
+    2. Then, provide the full response in valid HTML according to the query type, ensuring that the HTML is clean and can be directly rendered by a web client.
 
-    1. **Product Searches:**  
-    - For queries like "find a product" or "search for items," respond with an unordered list (<ul>) where each item (<li>) features the product’s image (<img>), title, price, and a clickable "View Details" link (<a>).
+    Below are examples of how to handle different queries:
 
-    2. **Greetings:**  
-    - For salutations such as "hi," "hello," or "good morning," provide a warm greeting, ask how you can assist, and request the user's name.
+    --- 
+    Example 1:
+    User Query: "Hi"
+    Plain-Text Answer: "Hello, how can I help?"
+    HTML Output: Use minimal formatting, for example:
+    <p>Hello, how can I help? What is your name?</p>
 
-    3. **Store Information:**  
-    - For inquiries about operating hours, location, contact details, policies (terms, privacy), or shipping information, answer in a courteous, customer-service style.
+    --- 
+    Example 2:
+    User Query: "Do you have stickers?"
+    Plain-Text Answer: "Yes, of course. We have a variety of stickers."
+    HTML Output: Respond with an unordered list (<ul>) where each list item (<li>) includes the product’s image (<img>), title, price, and a clickable "View Details" link (<a>). Also include a follow-up prompt, e.g.:
+    <ul>
+      <li>
+    <img src="https://example.com/sticker1.jpg" alt="Sticker 1" style="width:50px;">
+    <strong>Sticker 1</strong> - $4.00 
+    <a href="https://example.com/sticker1">View Details</a>
+      </li>
+      <li>
+    <img src="https://example.com/sticker2.jpg" alt="Sticker 2" style="width:50px;">
+    <strong>Sticker 2</strong> - $5.00 
+    <a href="https://example.com/sticker2">View Details</a>
+      </li>
+    </ul>
+    <p>Please let me know which one you like.</p>
 
-    4. **Product Comparisons:**  
-    - When comparing products (e.g., price, reviews, sales), present the details in a table format (<table>), using rows (<tr>) and columns (<td>) with clear tick/cross symbols for yes/no evaluations.
+    --- 
+    Example 3:
+    User Query: "What is your working hours?"
+    Plain-Text Answer: "Our working hours are between 6am and 9pm."
+    HTML Output: Use a simple paragraph, for example:
+    <p>Our working hours are between 6am and 9pm.</p>
 
-    5. **Product Recommendations:**  
-    - For recommendation requests, list suggested products in an unordered list (<ul>), including each product's image (<img>) and a "View Details" link (<a>).
+    --- 
+    Example 4:
+    User Query: "Which sticker is better, holographic or white vinyl?"
+    Plain-Text Answer: "Both are very good, but they offer different benefits."
+    HTML Output: Provide a comparison using an HTML table, for example:
+    <table border="1" cellspacing="0" cellpadding="5">
+      <tr>
+        <th>Feature</th>
+        <th>Holographic Stickers</th>
+        <th>White Vinyl Stickers</th>
+      </tr>
+      <tr>
+        <td>Durability</td>
+        <td>High</td>
+        <td>Medium</td>
+      </tr>
+      <tr>
+        <td>Finish</td>
+        <td>Shiny</td>
+        <td>Matte</td>
+      </tr>
+      <tr>
+        <td>Price</td>
+        <td>$4.50</td>
+        <td>$4.00</td>
+      </tr>
+    </table>
+    <p>Which one would you like to know more about?</p>
 
-    6. **Instructional Queries:**  
-    - For questions asking for step-by-step guidance, provide clear, numbered instructions in an ordered list (<ol>) with each step in a list item (<li>).
+    --- 
 
-    **HTML Output Requirement:**  
-    - Your final output must be valid HTML with appropriate tags (e.g., <ul>, <li>, <img>, <a>, <table>, <tr>, <td>, <ol>) and must not use any markdown formatting.  
-    - Ensure that the HTML can be rendered directly by a web client.
-
-    **Response Guidelines:**  
-    - If a product is identified in the context data, mention its availability and include a strong call-to-action (such as a "Buy Now" link with a medium-sized image).  
-    - If no exact match is found, suggest similar items and ask for additional details.  
-    - For queries outside of store data, kindly request clarification or refer the user to customer support.  
-    - Always keep your responses polite, concise, and sales-focused.
-
-    **Context Data from Pinecone:**  
+    Now, using the context data from Pinecone:
     {context}
 
-    **User's Optimized Query:**  
+    And the user's optimized query:
     {improved_query}
 
-    Please generate your response based on the above instructions in complete, valid HTML.
+    Please generate your response that first includes a brief plain-text answer and then the complete, valid HTML version. Make sure the HTML formatting matches the query type and examples provided above.
     """
+
 
     chat_response = openai_client.chat.completions.create(
         model="gpt-3.5-turbo",

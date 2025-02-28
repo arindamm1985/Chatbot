@@ -5,7 +5,9 @@ import os
 import uvicorn
 from dotenv import load_dotenv
 from pydantic import BaseModel 
+import requests
 from bs4 import BeautifulSoup
+import json
 load_dotenv()
 
 # Environment Variables
@@ -43,7 +45,7 @@ class EmptyNamespaceRequest(BaseModel):
 def extract_sections(url):
     # Fetch the page content
     response = requests.get(url)
-    response.raise_for_status()
+    response.raise_for_status()  # Raise an error for bad responses
     html = response.text
 
     # Parse the HTML with BeautifulSoup
@@ -56,24 +58,23 @@ def extract_sections(url):
     if logo:
         logo.decompose()
     
-    # Use the <main> tag if available; otherwise, fall back to the body.
+    # Use the <main> tag if available; otherwise, use the body.
     main_content = soup.find('main') or soup.body
 
     sections = []
-    # Iterate over direct children that are either <div> or <section>
-    for container in main_content.find_all(['div', 'section'], recursive=False):
+    # Iterate over direct child div elements of the main content
+    for div in main_content.find_all('div', recursive=False):
         section_data = {}
-        # Extract the section title (first heading element found)
-        title_tag = container.find(['h1', 'h2', 'h3', 'h4', 'h5', 'h6'])
+        # Attempt to extract a section title by looking for the first heading element (h1-h6)
+        title_tag = div.find(['h1', 'h2', 'h3', 'h4', 'h5', 'h6'])
         section_data['title'] = title_tag.get_text(strip=True) if title_tag else ""
-        
         # Extract immediate paragraph text as the section's content
-        paragraphs = container.find_all('p', recursive=False)
+        paragraphs = div.find_all('p', recursive=False)
         section_data['content'] = " ".join(p.get_text(strip=True) for p in paragraphs)
         
-        # Extract nested child containers (div or section) that contain a heading or paragraph
+        # Extract nested child sections: look for direct child divs that contain a heading or paragraph
         child_sections = []
-        for child in container.find_all(['div', 'section'], recursive=False):
+        for child in div.find_all('div', recursive=False):
             if child.find(['h1', 'h2', 'h3', 'h4', 'h5', 'h6']) or child.find('p'):
                 child_data = {}
                 child_title = child.find(['h1', 'h2', 'h3', 'h4', 'h5', 'h6'])
@@ -83,24 +84,25 @@ def extract_sections(url):
                 child_sections.append(child_data)
         section_data['child_sections'] = child_sections
         
-        # Include the container if it has any title, content, or child sections
+        # Only include the section if there's some content (title or text)
         if section_data['title'] or section_data['content'] or child_sections:
             sections.append(section_data)
     
-    return {"sections": sections}
+    # Return the structured data as JSON
+    return json.dumps({"sections": sections}, indent=2)
 
 @app.post('/api/extract')
 async def api_extract(req: ExtractRequest):
     url = req.url
     if not url:
-        return jsonify({"error": "No URL provided."}), 400
-
+        raise HTTPException(status_code=400, detail="No URL provided.")
+    
     try:
         extracted_data = extract_sections(url)
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
-    return jsonify(extracted_data)
+        raise HTTPException(status_code=500, detail=str(e))
+    
+    return extracted_data
 @app.post("/api/empty-namespace")
 def empty_pinecone_namespace(request: EmptyNamespaceRequest):
     try:

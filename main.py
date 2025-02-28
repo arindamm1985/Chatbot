@@ -253,8 +253,8 @@ def chat_with_context(req: ChatRequest, authorization: str = Header(...)):
     --- 
     Example 2:
     User Query: "Do you have stickers?"
-    Plain-Text Answer: "Yes, of course. We have a variety of stickers."
-    HTML Output: Respond with an unordered list (<ul>) where each list item (<li>) includes the product’s image (<img>), title, price, and a clickable "View Details" link (<a>). Also include a follow-up prompt, e.g.:
+    "Yes, of course. We have a variety of stickers."
+    Respond with an unordered list (<ul>) where each list item (<li>) includes the product’s image (<img>), title, price, and a clickable "View Details" link (<a>). Also include a follow-up prompt, e.g.:
     <ul>
       <li>
     <img src="https://example.com/sticker1.jpg" alt="Sticker 1" style="width:50px;">
@@ -272,15 +272,15 @@ def chat_with_context(req: ChatRequest, authorization: str = Header(...)):
     --- 
     Example 3:
     User Query: "What is your working hours?"
-    Plain-Text Answer: "Our working hours are between 6am and 9pm."
-    HTML Output: Use a simple paragraph, for example:
+    "Our working hours are between 6am and 9pm."
+    Use a simple paragraph, for example:
     <p>Our working hours are between 6am and 9pm.</p>
 
     --- 
     Example 4:
     User Query: "Which sticker is better, holographic or white vinyl?"
-    Plain-Text Answer: "Both are very good, but they offer different benefits."
-    HTML Output: Provide a comparison using an HTML table, for example:
+    "Both are very good, but they offer different benefits."
+    Provide a comparison using an HTML table, for example:
     <table border="1" cellspacing="0" cellpadding="5">
       <tr>
         <th>Feature</th>

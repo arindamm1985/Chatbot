@@ -96,7 +96,7 @@ def extract_sections(url):
             sections.append(section_data)
     
     # Return the structured data as JSON
-    return json.dumps({"sections": sections}, indent=2)
+    return {"sections": sections}
 
 @app.post('/api/extract')
 async def api_extract(req: ExtractRequest):

@@ -7,6 +7,12 @@ from dotenv import load_dotenv
 from pydantic import BaseModel 
 import requests
 from bs4 import BeautifulSoup
+from langchain.memory import ConversationBufferMemory
+from langchain.agents import AgentExecutor, initialize_agent, AgentType
+from langchain.tools import Tool
+from langchain.llms import OpenAI
+from langchain.vectorstores import Pinecone
+from langchain.embeddings import OpenAIEmbeddings
 import json
 load_dotenv()
 
@@ -19,6 +25,7 @@ INDEX_NAME = "woocommerce-chatbot"
 openai_client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 pc = Pinecone(api_key=os.getenv("PINECONE_API_KEY"))
 index = pc.Index("woocommerce-chatbot")
+embeddings = OpenAIEmbeddings(openai_api_key=OPENAI_API_KEY)
 
 app = FastAPI() 
 
@@ -196,29 +203,21 @@ def rewrite_query(original_query):
     )
 
     return chat_response.choices[0].message.content.strip()
-@app.post("/api/chat")
-def chat_with_context(req: ChatRequest, authorization: str = Header(...)):
-    # Validate API Key / Authorization here...
-
-    # Step 1: Rewrite the user's query to include specific keywords and phrases.
-    improved_query = rewrite_query(req.query)
     
-    # Step 2: Get an embedding for the optimized query.
-    query_embedding_resp = openai_client.embeddings.create(
-        input=improved_query,
-        model="text-embedding-ada-002"
-    )
-    query_embedding = query_embedding_resp.data[0].embedding
+memory_store = {}
 
-    # Step 3: Query Pinecone using the optimized embedding.
+### Function to fetch context from Pinecone using a given namespace (client_id)
+def fetch_context(query: str, namespace: str) -> str:
+    # Create the embedding for the query using LangChain's embeddings helper
+    query_embedding = embeddings.embed_query(query)
+    
     pinecone_results = index.query(
         vector=query_embedding,
         top_k=3,
-        namespace=req.client_id,
+        namespace=namespace,
         include_metadata=True
     )
-
-    # Step 4: Build context string from the returned matches.
+    
     context = "\n---\n".join([
         f"Title: {match['metadata']['title']}\n"
         f"Content: {match['metadata']['content'][:500]}\n"
@@ -232,105 +231,75 @@ def chat_with_context(req: ChatRequest, authorization: str = Header(...)):
         f"Payment Methods: {match['metadata'].get('payment', 'N/A')}"
         for match in pinecone_results['matches']
     ])
+    
+    return context if context else "No relevant data found."
 
-    # Step 5: Construct the final prompt for generating the sales response.
-    prompt = f"""
-    You are an AI Sales Assistant with deep knowledge of our WooCommerce store data. Your mission is to help customers, drive sales, and encourage purchases.
+# In get_agent(), we build our tool list using a local version of fetch_context that passes client_id as namespace.
+def get_agent(client_id: str):
+    # Create or get memory for this client
+    if client_id not in memory_store:
+        memory_store[client_id] = ConversationBufferMemory(memory_key="chat_history", return_messages=True)
+    memory = memory_store[client_id]
 
-    For each user query, produce a two-part answer:
-    1. A concise one‑line plain text answer that directly addresses the query.
-    2. A complete valid HTML version of the answer below the plain text answer. Do not include any labels like "Plain-Text Answer:" or "HTML Output:"—simply output the plain text answer on the first line, then a blank line, then the HTML code.
-
-    Below are examples of how to handle different queries:
-
-    Example 1:
-    User Query: "Hi"
-    Desired Output:
-    Hello, how can I help?
-
-    Example 2:
-    User Query: "Do you have stickers?"
-    Desired Output:
-    Yes, we have a variety of stickers available in different categories and variations.
-    <ul>
-      <li>
-        <img src="https://liveprojectscare.com/woocomercechagpt/sticker1.jpg" alt="Sticker 1" style="width:50px;">
-        <strong>Sticker 1</strong> - $4.00 
-        <a href="https://liveprojectscare.com/woocomercechagpt/sticker1">View Details</a>
-      </li>
-      <li>
-        <img src="https://liveprojectscare.com/woocomercechagpt/sticker2.jpg" alt="Sticker 2" style="width:50px;">
-        <strong>Sticker 2</strong> - $5.00 
-        <a href="https://liveprojectscare.com/woocomercechagpt/sticker2">View Details</a>
-      </li>
-    </ul>
-    <p>Please let me know which one you like.</p>
-
-    Example 3:
-    User Query: "What are your working hours?"
-    Desired Output:
-    Our working hours are between 6am and 9pm.
-
-    Example 4:
-    User Query: "Which sticker is better, holographic or white vinyl?"
-    Desired Output:
-    Both are excellent, but they offer different benefits.
-    <table border="1" cellspacing="0" cellpadding="5">
-      <tr>
-        <th>Feature</th>
-        <th>Holographic Stickers</th>
-        <th>White Vinyl Stickers</th>
-      </tr>
-      <tr>
-        <td>Durability</td>
-        <td>High</td>
-        <td>Medium</td>
-      </tr>
-      <tr>
-        <td>Finish</td>
-        <td>Shiny</td>
-        <td>Matte</td>
-      </tr>
-      <tr>
-        <td>Price</td>
-        <td>$4.50</td>
-        <td>$4.00</td>
-      </tr>
-    </table>
-    <p>Which one would you like to know more about?</p>
-
-    Now, using the context data from Pinecone:
-    {context}
-
-    And the user's optimized query:
-    {improved_query}
-
-    Please generate your final answer as follows:
-    - On the first line, output the plain text answer.
-    - Leave a blank line.
-    - Then output the complete valid HTML response, without any escaped characters (use standard quotes).
-
-    Make sure the HTML formatting fits the query type, and the overall response is concise, friendly, and sales-focused.
-    """
-
-
-
-    chat_response = openai_client.chat.completions.create(
-        model="gpt-3.5-turbo",
-        messages=[{"role": "user", "content": prompt}],
-        temperature=0
+    llm = OpenAI(model_name="gpt-3.5-turbo", openai_api_key=OPENAI_API_KEY)
+    
+    # Define a tool that fetches context using the client_id as namespace
+    fetch_context_tool = Tool(
+        name="Fetch Relevant Context",
+        func=lambda query: fetch_context(query, client_id),
+        description="Retrieves metadata and content from the Pinecone vector database using the client_id as the namespace."
     )
+    
+    # (Additional tools such as product search or order tracking could be added here if needed.)
+    tools = [fetch_context_tool]
+    
+    # Initialize the agent with the tools and memory
+    agent = initialize_agent(
+        tools=tools,
+        llm=llm,
+        agent=AgentType.ZERO_SHOT_REACT_DESCRIPTION,
+        verbose=True,
+        memory=memory
+    )
+    
+    executor = AgentExecutor(
+        agent=agent,
+        tools=tools,
+        verbose=True,
+        memory=memory
+    )
+    
+    return executor, memory
 
-    answer = chat_response.choices[0].message.content.strip()
+# API Request Model
+class ChatRequest(BaseModel):
+    query: str
+    client_id: str
 
-    return {
-        "success": True,
-        "response": answer,
-        "client_id": req.client_id,
-        "query": req.query,
-        "context": context,
-        "improved_query": improved_query
-    }
+@app.post("/api/chat")
+def chat_with_context(req: ChatRequest, authorization: str = Header(...)):
+    try:
+        # Get the agent executor and memory for this client_id (which is also used as namespace)
+        executor, memory = get_agent(req.client_id)
+        
+        # (Chat history is automatically managed via the memory instance.)
+        
+        # Execute the agent with the user query; the agent will invoke the fetch_context tool internally.
+        response = executor.run(req.query)
+        
+        # Store the query/response in memory
+        memory.save_context({"input": req.query}, {"output": response})
+        
+        return {
+            "success": True,
+            "response": response,
+            "client_id": req.client_id,
+            "query": req.query,
+            "chat_history": memory.load_memory_variables({}).get("chat_history", "No previous history.")
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/")
 async def root():

@@ -11,7 +11,7 @@ from langchain.memory import ConversationBufferMemory
 from langchain.agents import AgentExecutor, initialize_agent, AgentType
 from langchain.tools import Tool
 from langchain_openai import OpenAI
-from langchain_pinecone import Pinecone
+from langchain_community.vectorstores import Pinecone
 from langchain_community.embeddings import OpenAIEmbeddings
 import json
 load_dotenv()

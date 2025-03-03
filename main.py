@@ -10,7 +10,7 @@ from bs4 import BeautifulSoup
 from langchain.memory import ConversationBufferMemory
 from langchain.agents import AgentExecutor, initialize_agent, AgentType
 from langchain.tools import Tool
-from langchain-openai import OpenAI
+from langchain_openai import OpenAI
 from langchain_pinecone import Pinecone
 from langchain_community.embeddings import OpenAIEmbeddings
 import json

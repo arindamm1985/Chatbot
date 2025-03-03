@@ -7,3 +7,4 @@ requests
 pydantic
 beautifulsoup4==4.12.2
 langchain
+langchain-community

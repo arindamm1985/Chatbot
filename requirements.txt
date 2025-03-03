@@ -8,3 +8,5 @@ pydantic
 beautifulsoup4==4.12.2
 langchain
 langchain-community
+langchain-openai
+langchain_pinecone

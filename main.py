@@ -19,6 +19,13 @@ import string
 from flask import Flask, request, jsonify
 openai_client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 app = FastAPI() 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],            # Allow all origins, or specify a list of allowed origins
+    allow_credentials=True,
+    allow_methods=["*"],            # Allow all methods (GET, POST, etc.)
+    allow_headers=["*"]             # Allow all headers
+)
 class FetchRequest(BaseModel):
     website_url: str
 def fetch_meta_data(url):

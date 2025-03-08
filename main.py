@@ -7,6 +7,7 @@ nltk.download('averaged_perceptron_tagger_eng')
 from nltk.tokenize import sent_tokenize, word_tokenize
 from nltk import pos_tag, RegexpParser
 from fastapi import FastAPI, Header, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 import os
 import uvicorn
 from bs4 import BeautifulSoup

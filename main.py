@@ -70,7 +70,29 @@ def fetch_clean_content(url: str):
         "description": meta_description,
         "full_cleaned_content": cleaned_text
     }
+def generate_keywords(title: str, description: str, content: str):
+    """ Uses ChatGPT to generate relevant SEO keywords based on the website content. """
 
+    prompt = f"""
+    Analyze the following website details:
+
+    Title: {title}
+    Description: {description}
+    Content: {content[:1000]}  # Limiting content to first 1000 characters for processing
+
+    1. Identify what the site is about.
+    2. Extract the most relevant SEO keywords that users would search for.
+    3. Return keywords as a comma-separated list.
+    """
+
+    chat_response = openai_client.chat.completions.create(
+        model="gpt-4",
+        messages=[{"role": "user", "content": prompt}],
+        temperature=0
+    )
+
+    return chat_response.choices[0].message.content.strip()
+    return keywords.split(",")
 def clean_text(text: str):
     """ Cleans text by removing special characters, stopwords, and unnecessary spaces. """
     text = re.sub(r'[^a-zA-Z0-9\s]', '', text)  # Remove special characters
@@ -326,8 +348,18 @@ def get_google_ranking_list(keyword, num_results=10):
 def fetch_keywords_endpoint(req: FetchRequest):
     """ FastAPI endpoint to fetch SEO keywords from a given URL. """
     website_url = req.website_url
-    result = fetch_clean_content(website_url)
-    return result
+    site_data = fetch_clean_content(website_url)
+    if "error" in site_data:
+        return site_data
+
+    keywords = generate_keywords(site_data["title"], site_data["description"], site_data["full_cleaned_content"])
+
+    return {
+        "title": site_data["title"],
+        "description": site_data["description"],
+        "full_cleaned_content": site_data["full_cleaned_content"],
+        "generated_keywords": keywords
+    }
 @app.post("/api/fetch")
 def extract(req: FetchRequest):
 

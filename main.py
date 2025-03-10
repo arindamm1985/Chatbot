@@ -99,7 +99,7 @@ def generate_keywords(title: str, description: str, content: str):
         temperature=0
     )
 
-     keywords = chat_response.choices[0].message.content.strip()
+    keywords = chat_response.choices[0].message.content.strip()
     return keywords.split(", ")
 def clean_text(text: str):
     """ Cleans text by removing special characters, stopwords, and unnecessary spaces. """

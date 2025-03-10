@@ -99,7 +99,7 @@ def generate_keywords(title: str, description: str, content: str):
         temperature=0
     )
 
-    return chat_response.choices[0].message.content.strip()
+     keywords = chat_response.choices[0].message.content.strip()
     return keywords.split(", ")
 def clean_text(text: str):
     """ Cleans text by removing special characters, stopwords, and unnecessary spaces. """
@@ -376,11 +376,14 @@ def extract(req: FetchRequest):
     
     try:
         # Fetch meta data
-        title, meta_keywords, meta_description = fetch_meta_data(website_url)
-        top_keywords = extract_keywords(title, meta_keywords,meta_description)
-        
-        # Extract the domain (e.g., example.com) from the URL
-        domain = re.sub(r'^https?://(www\.)?', '', website_url).split('/')[0]
+        site_data = fetch_clean_content(website_url)
+        if "error" in site_data:
+        return site_data
+
+        top_keywords = generate_keywords(site_data["title"], site_data["description"], site_data["full_cleaned_content"])
+        title = site_data["title"]
+        meta_description = site_data["description"]
+       
         
         # For each keyword, get the Google ranking
         results = []
@@ -393,7 +396,6 @@ def extract(req: FetchRequest):
             "website": website_url,
             "meta": {
                 "title": title,
-                "meta_keywords": meta_keywords,
                 "meta_description": meta_description,
             },
             "top_keywords": top_keywords,

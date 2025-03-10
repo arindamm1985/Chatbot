@@ -74,15 +74,17 @@ def generate_keywords(title: str, description: str, content: str):
     """ Uses ChatGPT to generate relevant SEO keywords based on the website content. """
 
     prompt = f"""
-    Analyze the following website details:
+    Analyze the following website details and extract SEO-friendly keywords:
 
     Title: {title}
     Description: {description}
-    Content: {content[:1000]}  # Limiting content to first 1000 characters for processing
+    Content: {content[:1000]}  # Limiting content to first 1000 characters
 
-    1. Identify what the site is about.
-   2. Extract the most relevant SEO keywords that real users would search for.
-    3. Return ONLY the keywords, separated by commas (NO extra text).
+    1. Identify what the website is about in a short summary.
+    2. Extract the most relevant SEO keywords that real users would search for.
+    3. **Do NOT include generic keywords unless they are combined with relevant industry-specific terms**.
+    4. Keep keywords that are relevant to the site's industry.
+    5. Return ONLY the keywords, separated by commas (NO extra text).
 
     Example Output:
     keyword1, keyword2, keyword3, keyword4, keyword5

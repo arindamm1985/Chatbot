@@ -8,3 +8,4 @@ uvicorn[standard]
 python-dotenv
 pydantic
 nltk
+scikit-learn

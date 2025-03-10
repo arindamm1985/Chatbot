@@ -38,7 +38,45 @@ UNWANTED_PHRASES = {
     "how to", "where to", "what are", "which is", "who can", "when to", 
     "why should", "why is", "how do", "can i", "is it", "best way to"
 }
+STOPWORDS = set(stopwords.words('english'))
 
+def fetch_clean_content(url: str):
+    """ Fetches, cleans, and extracts readable content from a webpage. """
+    headers = {'User-Agent': 'Mozilla/5.0'}
+    response = requests.get(url, headers=headers)
+
+    if response.status_code != 200:
+        return {"error": f"Unable to access {url}"}
+
+    soup = BeautifulSoup(response.text, 'html.parser')
+
+    # Extract meta title and meta description
+    title = soup.find("title").text.strip() if soup.find("title") else "N/A"
+    meta_description = soup.find("meta", attrs={"name": "description"})
+    meta_description = meta_description["content"].strip() if meta_description else "N/A"
+
+    # Remove unnecessary elements
+    for tag in soup(['script', 'style', 'header', 'footer', 'nav', 'aside']):
+        tag.decompose()
+
+    # Extract readable body content
+    body_text = ' '.join(soup.stripped_strings)
+
+    # Clean and process text
+    cleaned_text = clean_text(body_text)
+
+    return {
+        "title": title,
+        "description": meta_description,
+        "full_cleaned_content": cleaned_text
+    }
+
+def clean_text(text: str):
+    """ Cleans text by removing special characters, stopwords, and unnecessary spaces. """
+    text = re.sub(r'[^a-zA-Z0-9\s]', '', text)  # Remove special characters
+    words = word_tokenize(text.lower())  # Tokenize and convert to lowercase
+    words = [word for word in words if word not in STOPWORDS and len(word) > 2]  # Remove stopwords
+    return ' '.join(words)
 def fetch_keywords(url: str):
     """ Fetches keywords from a webpage. """
     headers = {'User-Agent': 'Mozilla/5.0'}
@@ -288,7 +326,7 @@ def get_google_ranking_list(keyword, num_results=10):
 def fetch_keywords_endpoint(req: FetchRequest):
     """ FastAPI endpoint to fetch SEO keywords from a given URL. """
     website_url = req.website_url
-    result = fetch_keywords(website_url)
+    result = fetch_clean_content(website_url)
     return result
 @app.post("/api/fetch")
 def extract(req: FetchRequest):

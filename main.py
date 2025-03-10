@@ -388,7 +388,7 @@ def extract(req: FetchRequest):
         # For each keyword, get the Google ranking
         results = []
         for keyword in top_keywords:
-            ranking = get_google_ranking(keyword, domain)
+            ranking = get_google_ranking(keyword, website_url)
             resulitems = get_google_ranking_list(keyword)
             results.append({"keyword": keyword, "google_ranking": ranking,"search_result":resulitems})
         

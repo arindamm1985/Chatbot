@@ -74,22 +74,24 @@ def generate_keywords(title: str, description: str, content: str):
     """ Uses ChatGPT to generate relevant SEO keywords based on the website content. """
 
     prompt = f"""
-    Analyze the following website details and extract SEO-friendly keywords:
+    You are an expert SEO strategist. Your task is to extract highly relevant SEO-friendly keywords from the following website details:
 
-    Title: {title}
-    Description: {description}
-    Content: {content[:1000]}  # Limiting content to first 1000 characters
+    **Website Information**
+    - **Title**: {title}
+    - **Description**: {description}
+    - **Content Excerpt**: {content[:1000]}  # Limiting content to first 1000 characters
 
-    1. Identify what the website is about in a short summary.
-    2. Extract the most relevant SEO keywords that real users would search for.
-    3. **Do NOT include generic keywords unless they are combined with relevant industry-specific terms**.
-    4. Keep keywords that are relevant to the site's industry.
-    5. Return ONLY the keywords, separated by commas (NO extra text).
+    **Instructions**:
+    1. **Focus only on the services offered and the key issues the website addresses**.
+    2. **Do NOT include generic or vague terms** like "real change," "navigate disruption," or "unlock growth" unless they are **directly tied to a service or issue**.
+    3. **Extract SEO keywords that real users would search for to find this business**.
+    4. **Prioritize industry-specific terms** over broad marketing phrases.
+    5. **Return ONLY the final list of SEO keywords, separated by commas (NO extra text).**
 
-    Example Output:
-    keyword1, keyword2, keyword3, keyword4, keyword5
+    Example of a good response:
+    - For a law firm: "corporate law services, business contract attorney, intellectual property lawyer, legal consulting firm"
+    - For a digital agency: "SEO optimization services, website design company, social media branding agency, PPC advertising firm"
     """
-
     chat_response = openai_client.chat.completions.create(
         model="gpt-4",
         messages=[{"role": "user", "content": prompt}],

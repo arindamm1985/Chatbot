@@ -1,12 +1,14 @@
 import requests
 import nltk
 from urllib.parse import urlparse
+nltk.download('stopwords')
 nltk.download('punkt_tab')
 nltk.download('averaged_perceptron_tagger')
 nltk.download('averaged_perceptron_tagger_eng')
 from nltk.tokenize import sent_tokenize, word_tokenize
+from nltk.corpus import stopwords
 from nltk import pos_tag, RegexpParser
-from fastapi import FastAPI, Header, HTTPException
+from fastapi import FastAPI, Query, Header, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 import os
 import uvicorn
@@ -18,6 +20,8 @@ from openai import OpenAI
 from collections import Counter
 import string
 from flask import Flask, request, jsonify
+from collections import Counter
+from sklearn.feature_extraction.text import TfidfVectorizer
 openai_client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 app = FastAPI() 
 app.add_middleware(
@@ -27,6 +31,73 @@ app.add_middleware(
     allow_methods=["*"],            # Allow all methods (GET, POST, etc.)
     allow_headers=["*"]             # Allow all headers
 )
+STOPWORDS = set(stopwords.words('english'))
+
+# List of unwanted question phrases
+UNWANTED_PHRASES = {
+    "how to", "where to", "what are", "which is", "who can", "when to", 
+    "why should", "why is", "how do", "can i", "is it", "best way to"
+}
+
+def fetch_keywords(url: str):
+    """ Fetches keywords from a webpage. """
+    headers = {'User-Agent': 'Mozilla/5.0'}
+    response = requests.get(url, headers=headers)
+
+    if response.status_code != 200:
+        return {"error": f"Unable to access {url}"}
+
+    soup = BeautifulSoup(response.text, 'html.parser')
+
+    # Extract title
+    title = soup.find("title").text.strip() if soup.find("title") else "N/A"
+
+    # Remove unnecessary tags
+    for tag in soup(['script', 'style', 'header', 'footer', 'nav', 'aside']):
+        tag.decompose()
+
+    # Extract visible body text
+    body_text = ' '.join(soup.stripped_strings)
+
+    # Extract meaningful keyword phrases
+    search_phrases = extract_search_phrases(body_text)
+    phrase_freq = keyword_frequency(search_phrases)
+    tfidf_keywords = calculate_tfidf(body_text)
+
+    return {
+        "title": title,
+        "top_keywords_by_frequency": dict(phrase_freq.most_common(10)),
+        "top_keywords_by_tfidf": {k: round(v, 4) for k, v in tfidf_keywords[:10]}
+    }
+
+def extract_search_phrases(text):
+    """ Extracts meaningful search queries and removes question words. """
+    sentences = sent_tokenize(text.lower())  # Split into sentences
+    search_phrases = []
+
+    for sentence in sentences:
+        words = word_tokenize(sentence)
+        filtered_words = [word for word in words if word not in STOPWORDS]
+        phrase = " ".join(filtered_words)
+
+        # Remove phrases that start with unwanted words
+        if not any(phrase.startswith(bad) for bad in UNWANTED_PHRASES) and len(filtered_words) >= 4:
+            search_phrases.append(phrase)
+
+    return search_phrases
+
+def keyword_frequency(phrases):
+    """ Counts phrase occurrences in the text. """
+    return Counter(phrases)
+
+def calculate_tfidf(text):
+    """ Computes TF-IDF scores for multi-word search phrases. """
+    vectorizer = TfidfVectorizer(ngram_range=(4,6), stop_words='english')  # Extract 4-6 word search queries
+    tfidf_matrix = vectorizer.fit_transform([text])
+    feature_names = vectorizer.get_feature_names_out()
+
+    tfidf_scores = dict(zip(feature_names, tfidf_matrix.toarray()[0]))
+    return sorted(tfidf_scores.items(), key=lambda x: x[1], reverse=True)
 class FetchRequest(BaseModel):
     website_url: str
 def fetch_meta_data(url):
@@ -213,6 +284,12 @@ def get_google_ranking_list(keyword, num_results=10):
         return {"search_result": domains}
     except Exception as e:
         return f"Error: {e}"
+@app.get("/api/fetch_keywords")
+async def fetch_keywords_endpoint(req: FetchRequest):
+    """ FastAPI endpoint to fetch SEO keywords from a given URL. """
+    website_url = req.website_url
+    result = fetch_keywords(website_url)
+    return result
 @app.post("/api/fetch")
 def extract(req: FetchRequest):
 

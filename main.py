@@ -368,7 +368,7 @@ def fetch_keywords_endpoint(req: FetchRequest):
         "full_cleaned_content": site_data["full_cleaned_content"],
         "generated_keywords": keywords
     }
-@app.post("/api/fetchreq")
+@app.post("/api/fetch")
 def extract(req: FetchRequest):
 
 

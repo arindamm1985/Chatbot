@@ -81,8 +81,11 @@ def generate_keywords(title: str, description: str, content: str):
     Content: {content[:1000]}  # Limiting content to first 1000 characters for processing
 
     1. Identify what the site is about.
-    2. Extract the most relevant SEO keywords that users would search for.
-    3. Return keywords as a comma-separated list.
+   2. Extract the most relevant SEO keywords that real users would search for.
+    3. Return ONLY the keywords, separated by commas (NO extra text).
+
+    Example Output:
+    keyword1, keyword2, keyword3, keyword4, keyword5
     """
 
     chat_response = openai_client.chat.completions.create(
@@ -92,7 +95,7 @@ def generate_keywords(title: str, description: str, content: str):
     )
 
     return chat_response.choices[0].message.content.strip()
-    return keywords.split(",")
+    return keywords.split(", ")
 def clean_text(text: str):
     """ Cleans text by removing special characters, stopwords, and unnecessary spaces. """
     text = re.sub(r'[^a-zA-Z0-9\s]', '', text)  # Remove special characters

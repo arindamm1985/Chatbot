@@ -378,7 +378,7 @@ def extract(req: FetchRequest):
         # Fetch meta data
         site_data = fetch_clean_content(website_url)
         if "error" in site_data:
-        return site_data
+            return site_data
 
         top_keywords = generate_keywords(site_data["title"], site_data["description"], site_data["full_cleaned_content"])
         title = site_data["title"]

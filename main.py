@@ -87,7 +87,8 @@ def generate_keywords(title: str, description: str, content: str):
     3. **Extract SEO keywords that real users would search for to find this business**.
     4. **Prioritize industry-specific terms** over broad marketing phrases.
     5. **Return ONLY the final list of SEO keywords, separated by commas (NO extra text).**
-
+    Example Output:
+    keyword1, keyword2, keyword3, keyword4, keyword5
     Example of a good response:
     - For a law firm: "corporate law services, business contract attorney, intellectual property lawyer, legal consulting firm"
     - For a digital agency: "SEO optimization services, website design company, social media branding agency, PPC advertising firm"

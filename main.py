@@ -284,8 +284,8 @@ def get_google_ranking_list(keyword, num_results=10):
         return {"search_result": domains}
     except Exception as e:
         return f"Error: {e}"
-@app.get("/api/fetch_keywords")
-async def fetch_keywords_endpoint(req: FetchRequest):
+@app.post("/api/fetch_keywords")
+def fetch_keywords_endpoint(req: FetchRequest):
     """ FastAPI endpoint to fetch SEO keywords from a given URL. """
     website_url = req.website_url
     result = fetch_keywords(website_url)

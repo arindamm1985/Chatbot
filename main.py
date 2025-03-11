@@ -470,7 +470,7 @@ def get_google_ranking(keyword, domain, num_results=20):
     """
     try:
         headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36'}
-        results = list(search(keyword, num_results=num_results, region="us",sleep_interval=5))
+        results = list(search(keyword, num_results=num_results, region="us"))
         search_result = results[:10]  # Top 10 results
         
         ranking = None

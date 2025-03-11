@@ -332,17 +332,27 @@ def extract_keywords(title, meta_keywords,meta_description):
     
 def get_google_ranking(keyword, domain, num_results=20):
     """
-    Searches Google for the given keyword and returns the ranking position
-    of the website (if found within the top num_results).
+    Searches Google for the given keyword and returns an array containing:
+    
+    1) search_result: an array of the top 10 results.
+    2) ranking: the ranking position of the website (if found within the top num_results), 
+       or "Above 20" if not found.
     """
     try:
-        results = list(search(keyword, num_results=num_results,region="us"))
+        results = list(search(keyword, num_results=num_results, region="us"))
+        search_result = results[:10]  # Top 10 results
+        
+        ranking = None
         for idx, result in enumerate(results):
             if domain in result:
-                return idx + 1  # Rankings are 1-indexed
-        return "Above 20"
+                ranking = idx + 1  # Rankings are 1-indexed
+                break
+        if ranking is None:
+            ranking = "Above 20"
+        
+        return [search_result, ranking]
     except Exception as e:
-        return f"Error: {e}"
+        return [[], f"Error: {e}"]
 
 def get_google_ranking_list(keyword, num_results=10):
     """
@@ -404,8 +414,7 @@ def extract(req: FetchRequest):
         results = []
         for keyword in top_keywords:
             ranking = get_google_ranking(keyword, website_url)
-            resulitems = get_google_ranking_list(keyword)
-            results.append({"keyword": keyword, "google_ranking": ranking,"search_result":resulitems})
+            results.append({"keyword": keyword, "google_ranking": ranking[1],"search_result":ranking[0]})
         
         response_payload = {
             "website": website_url,

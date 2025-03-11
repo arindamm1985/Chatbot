@@ -78,7 +78,7 @@ def fetch_clean_content(url: str):
     meta_description = soup.find("meta", attrs={"name": "description"})
     meta_description = meta_description["content"].strip() if meta_description else "N/A"
 
-    # Remove non-content elements (keep header, footer, nav intact).
+   # Remove non-content elements (keep header, footer, nav intact).
     for tag in soup(['script', 'style', 'aside']):
         tag.decompose()
 
@@ -98,20 +98,30 @@ def fetch_clean_content(url: str):
         for img in tag_copy.find_all("img"):
             img.decompose()
 
-        # For div elements, only include if they have no remaining inner tags.
+        # Remove all inner <input>, <select>, <textarea>, and <button> tags.
+        for unwanted in tag_copy.find_all(["input", "select", "textarea", "button"]):
+            unwanted.decompose()
+
+        # If the tag is a <ul>, recursively remove attributes from its <li> children.
+        if tag_copy.name == "ul":
+            for li in tag_copy.find_all("li"):
+                li.attrs = {}
+
+        # For <div> elements, only include if they contain only text (i.e. no inner tags).
         if tag_copy.name == "div":
-            # If after removing <img> tags, the div contains any inner tag, skip it.
+            # After removals, if the div contains any inner tags, skip it.
             if tag_copy.find(True) is not None:
                 continue
 
-        # Remove all attributes from the tag.
+        # Remove all attributes from the tag itself.
         tag_copy.attrs = {}
 
-        # Append the cleaned tag's HTML.
+        # Append the cleaned tag's HTML to the summary.
         summary_parts.append(str(tag_copy))
 
     # Combine the parts in order to create the summary HTML.
     page_summary_html = "\n".join(summary_parts)
+
 
     return {
         "title": title,

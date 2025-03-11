@@ -75,7 +75,7 @@ def create_chatgpt_context(summary_html: str) -> str:
     result_lines = []
 
     # Process all <ul> tags for menu items
-    for ul in soup.find_all("ul"):
+    for ul in soup.find_all("nav ul"):
         menu_lines = process_list(ul, indent=1)
         if menu_lines:
             result_lines.append("Menu items:")

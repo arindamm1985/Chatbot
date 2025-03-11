@@ -183,7 +183,22 @@ def fetch_clean_content(url: str):
     }
 def generate_keywords(title: str, description: str, content: str):
     """ Uses ChatGPT to generate relevant SEO keywords based on the website content. """
+    business_type_prompt = f"""
+    You are an expert in identifying business types from website information.
+    Please analyze the following website details and extract the primary business type (e.g., Legal Operations Support, Digital Marketing Agency, etc.) that best describes the business.
 
+    **Website Information**
+    - **Title**: {title}
+    - **Description**: {description}
+
+    Return only the business type as a short phrase.
+    """
+    chat_responseb = openai_client.chat.completions.create(
+        model="gpt-4",
+        messages=[{"role": "user", "content": business_type_prompt}],
+        temperature=0
+    )
+    extracted_business_type = chat_responseb.choices[0].message.content.strip()
     prompt = f"""
     You are an expert SEO strategist. Your task is to extract highly relevant SEO-friendly keywords from the following website details:
 
@@ -212,7 +227,11 @@ def generate_keywords(title: str, description: str, content: str):
     )
 
     keywords = chat_response.choices[0].message.content.strip()
-    return keywords.split(", ")
+    
+    updated_keywords = keywords.split(", ")
+    updated_keywords.append("Type: "+extracted_business_type)
+    return updated_keywords
+    
 def clean_text(text: str):
     """ Cleans text by removing special characters, stopwords, and unnecessary spaces. """
     text = re.sub(r'[^a-zA-Z0-9\s]', '', text)  # Remove special characters

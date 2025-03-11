@@ -78,7 +78,7 @@ def fetch_clean_content(url: str):
     meta_description = soup.find("meta", attrs={"name": "description"})
     meta_description = meta_description["content"].strip() if meta_description else "N/A"
 
-    # Remove unnecessary elements (keep header, footer, nav intact).
+    # Remove non-content elements (keep header, footer, nav intact).
     for tag in soup(['script', 'style', 'aside']):
         tag.decompose()
 
@@ -86,21 +86,32 @@ def fetch_clean_content(url: str):
     body_text = ' '.join(soup.stripped_strings)
     cleaned_text = clean_text(body_text)
 
-    # Define the tags we want to extract for the page summary.
-    tags_to_extract = ["p", "span", "h1", "h2", "h3", "h4", "h5", "ul","ol", "li", "a"]
+    # Define the tags to extract for the summary.
+    tags_to_extract = ["p", "span", "h1", "h2", "h3", "h4", "h5", "ul", "li", "a", "div"]
     summary_parts = []
 
-    # Search recursively in the full page (you can also limit to soup.body if desired)
+    # Search recursively in the full page for matching tags.
     for tag in soup.find_all(lambda t: t.name in tags_to_extract):
-        # Create a deep copy of the tag to avoid modifying the original soup.
         tag_copy = copy.deepcopy(tag)
+
+        # Remove all inner <img> tags.
+        for img in tag_copy.find_all("img"):
+            img.decompose()
+
+        # For div elements, only include if they have no remaining inner tags.
+        if tag_copy.name == "div":
+            # If after removing <img> tags, the div contains any inner tag, skip it.
+            if tag_copy.find(True) is not None:
+                continue
+
         # Remove all attributes from the tag.
         tag_copy.attrs = {}
+
         # Append the cleaned tag's HTML.
         summary_parts.append(str(tag_copy))
 
     # Combine the parts in order to create the summary HTML.
-    page_summary_html = "<br/>".join(summary_parts)
+    page_summary_html = "\n".join(summary_parts)
 
     return {
         "title": title,

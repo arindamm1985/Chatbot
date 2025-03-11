@@ -188,7 +188,7 @@ def generate_keywords(title: str, description: str, content: str):
     You are an expert SEO strategist and an expert in identifying business types from website information.
 
     Part 1: Identify the Business Type
-    Please analyze the following website details and extract the primary business type (e.g., Legal Operations Support, Digital Marketing Agency, etc.) that best describes the business.
+    Please analyze the following website details and extract the primary business type (e.g., Legal Operations Support, Digital Marketing Agency, Business Directory Service, etc.) that best describes the business.
     Return only the business type as a short phrase.
 
     Website Information:
@@ -210,12 +210,17 @@ def generate_keywords(title: str, description: str, content: str):
     4. Do NOT include generic or vague terms like "real change," "navigate disruption," or "unlock growth" unless they are directly tied to a specific service or issue.
     5. Extract SEO keywords that real users would search for to find a business of this type.
     6. Prioritize industry-specific and service-specific terms over broad marketing phrases.
-    7. Return ONLY the final list of SEO keywords, separated by commas (NO extra text). Additionally, prepend the extracted business type to the top of the list in the format: "Type: <extracted business type>", followed by a comma, then the rest of the keywords.
+    7. Return ONLY the final list of SEO keywords, separated by commas (NO extra text). Additionally, prepend the extracted business type to the top of the list in the format: "Type: <extracted business type>", followed by a comma and then the rest of the keywords.
     8. Do NOT include generic items like "about", "contact", "blog", "home", "videos", "photos", "pages", "teams", "podcasts" unless they are directly appended with service-specific terms.
     9. Additionally, exclude keywords that are irrelevant to the core focus of the business. For example, if the determined business type is "Legal Operations Support", do not include keywords like "AI Insights", "US Openings", "UK Openings", or "Asia-Pacific Openings".
+    10. Finally, if any generic keywords appear (for instance, "Browse States", "Listing Id.", "Directions", "Maps"), modify them to be industry specific by appending or prepending the business type. For example, if the business type is "Business Directory Service":
+    - "Browse States" should become "Browse States for business directory"
+    - "Listing Id." should become "business directory Listing Id."
+    - "Directions" should become "Directions for business directory"
+    - "Maps" should become "Maps for business directory"
 
     Example Output:
-    Type: Legal Operations Support, keyword1, keyword2, keyword3, keyword4
+    Type: Business Directory Service, keyword1, keyword2, keyword3, keyword4
     """
     chat_response = openai_client.chat.completions.create(
         model="gpt-4",

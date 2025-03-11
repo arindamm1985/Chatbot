@@ -216,7 +216,7 @@ def generate_keywords(title: str, description: str, content: str):
     10. If any generic keywords appear (e.g., "Browse States", "Listing Id.", "Directions", "Maps"), modify them to be industry-specific by incorporating the extracted business type.
 
     Example Output:
-    Digital Marketing and Branding Agency, keyword1, keyword2, keyword3, keyword4, keyword5, keyword6, keyword7, keyword8, keyword9
+    keyword1, keyword2, keyword3, keyword4, keyword5, keyword6, keyword7, keyword8, keyword9, Keyword10
 
     """
 

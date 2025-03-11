@@ -188,15 +188,15 @@ def generate_keywords(title: str, description: str, content: str):
     You are an expert SEO strategist and an expert in identifying business types from website information.
 
     Part 1: Identify the Business Type
-    Please analyze the following website details and extract the primary business type (e.g., Legal Operations Support, Digital Marketing Agency, Business Directory Service, etc.) that best describes the business.
-    Return only the business type as a short phrase.
+    Please analyze the following website details and extract the primary business type (e.g., Digital Marketing and Branding Agency, Legal Operations Support, Business Directory Service, etc.) that best describes the business.
+    Return only the business type as a short phrase. Do not include any labels or markers such as "Part 1:" in your output.
 
     Website Information:
     - Title: {title}
     - Description: {description}
 
     Part 2: Extract SEO Keywords
-    Using the business type you determined above, extract highly relevant SEO-friendly keywords from the website details. Tailor your keyword extraction to the identified business type.
+    Now, using the business type you determined above, extract highly relevant SEO-friendly keywords from the website details. Tailor your keyword extraction to the identified business type.
 
     Website Information:
     - Title: {title}
@@ -210,14 +210,15 @@ def generate_keywords(title: str, description: str, content: str):
     4. Do NOT include generic or vague terms like "real change," "navigate disruption," or "unlock growth" unless they are directly tied to a specific service or issue.
     5. Extract SEO keywords that real users would search for to find a business of this type.
     6. Prioritize industry-specific and service-specific terms over broad marketing phrases.
-    7. Return ONLY the final list of SEO keywords, separated by commas (NO extra text). Additionally, prepend the extracted business type as the first keyword, without any extra label.
+    7. Return ONLY the final list of SEO keywords, separated by commas (NO extra text, explanation, or markers). Prepend the final output with the extracted business type as the first keyword. Do not include any "Part 1:" or "Part 2:" text in the final output.
     8. Do NOT include generic items like "about", "contact", "blog", "home", "videos", "photos", "pages", "teams", "podcasts" unless they are directly appended with service-specific terms.
-    9. Additionally, exclude keywords that are irrelevant to the core focus of the business. For example, if the determined business type is "Legal Operations Support", do not include keywords like "AI Insights", "US Openings", "UK Openings", or "Asia-Pacific Openings".
-    10. If any generic keywords appear (for example, "Browse States", "Listing Id.", "Directions", "Maps"), modify them to be industry-specific by appending or prepending the business type as needed.
+    9. Exclude keywords that are irrelevant to the core focus of the business. For example, if the determined business type is "Digital Marketing and Branding Agency", do not include keywords like "job openings", "AI Insights", "US Openings", etc.
+    10. If any generic keywords appear (e.g., "Browse States", "Listing Id.", "Directions", "Maps"), modify them to be industry-specific by incorporating the extracted business type.
 
     Example Output:
-    Business Directory Service, keyword1, keyword2, keyword3, keyword4
+    Digital Marketing and Branding Agency, keyword1, keyword2, keyword3, keyword4
     """
+
     chat_response = openai_client.chat.completions.create(
         model="gpt-4",
         messages=[{"role": "user", "content": prompt}],

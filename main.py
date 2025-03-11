@@ -441,7 +441,7 @@ def extract_keywords(title, meta_keywords,meta_description):
             if keyword and keyword not in keywords:
                 keywords.append(keyword)
     
-    return list(keywords_set.values())
+    return list(keywords_set.values()) 
     
 def get_google_ranking(keyword, domain, num_results=20):
     """

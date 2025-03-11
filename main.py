@@ -22,6 +22,8 @@ import string
 from flask import Flask, request, jsonify
 from collections import Counter
 from sklearn.feature_extraction.text import TfidfVectorizer
+import io
+import pycurl
 openai_client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 app = FastAPI() 
 app.add_middleware(
@@ -39,16 +41,22 @@ UNWANTED_PHRASES = {
     "why should", "why is", "how do", "can i", "is it", "best way to"
 }
 STOPWORDS = set(stopwords.words('english'))
-
+def fetch_with_pycurl(url):
+    buffer = io.BytesIO()
+    c = pycurl.Curl()
+    c.setopt(c.URL, url)
+    c.setopt(c.USERAGENT, 'Mozilla/5.0')
+    c.setopt(c.WRITEDATA, buffer)
+    c.perform()
+    c.close()
+    
+    body = buffer.getvalue().decode('utf-8')
+    return body
 def fetch_clean_content(url: str):
     """ Fetches, cleans, and extracts readable content from a webpage. """
-    headers = {'User-Agent': 'Mozilla/5.0'}
-    response = requests.get(url, headers=headers)
+    response_text = fetch_with_pycurl(url)
 
-    if response.status_code != 200:
-        return {"error": f"Unable to access {url}"}
-
-    soup = BeautifulSoup(response.text, 'html.parser')
+    soup = BeautifulSoup(response_text, 'html.parser')
 
     # Extract meta title and meta description
     title = soup.find("title").text.strip() if soup.find("title") else "N/A"

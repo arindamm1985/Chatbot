@@ -183,42 +183,39 @@ def fetch_clean_content(url: str):
     }
 def generate_keywords(title: str, description: str, content: str):
     """ Uses ChatGPT to generate relevant SEO keywords based on the website content. """
-    business_type_prompt = f"""
-    You are an expert in identifying business types from website information.
-    Please analyze the following website details and extract the primary business type (e.g., Legal Operations Support, Digital Marketing Agency, etc.) that best describes the business.
-
-    **Website Information**
-    - **Title**: {title}
-    - **Description**: {description}
-
-    Return only the business type as a short phrase.
-    """
-    chat_responseb = openai_client.chat.completions.create(
-        model="gpt-4",
-        messages=[{"role": "user", "content": business_type_prompt}],
-        temperature=0
-    )
-    extracted_business_type = chat_responseb.choices[0].message.content.strip()
+    
     prompt = f"""
-    You are an expert SEO strategist. Your task is to extract highly relevant SEO-friendly keywords from the following website details:
+    You are an expert SEO strategist and an expert in identifying business types from website information.
 
-    **Website Information**
-    - **Title**: {title}
-    - **Description**: {description}
-    - **Content Excerpt**: {content}
+    Part 1: Identify the Business Type
+    Please analyze the following website details and extract the primary business type (e.g., Legal Operations Support, Digital Marketing Agency, etc.) that best describes the business.
+    Return only the business type as a short phrase.
 
-    **Instructions**:
-    1. Focus on the services offered, key issues, and industry-specific topics represented in the content excerpt, which includes nested menu items.
+    Website Information:
+    - Title: {title}
+    - Description: {description}
+
+    Part 2: Extract SEO Keywords
+    Using the business type you determined above, extract highly relevant SEO-friendly keywords from the website details. Tailor your keyword extraction to the identified business type.
+
+    Website Information:
+    - Title: {title}
+    - Description: {description}
+    - Content Excerpt: {content}
+
+    Instructions:
+    1. Focus on the services offered, key issues, and industry-specific topics represented in the content excerpt.
     2. Only consider those menu items that fall under categories like "services", "what we do", "what we offer", or "our products". Ignore other generic or navigational items (e.g. "Menu items", "Contact Us", "Who we are") that do not represent actual services or issues.
     3. Deduplicate and consolidate similar terms.
     4. Do NOT include generic or vague terms like "real change," "navigate disruption," or "unlock growth" unless they are directly tied to a specific service or issue.
-    5. Extract SEO keywords that real users would search for to find this business.
+    5. Extract SEO keywords that real users would search for to find a business of this type.
     6. Prioritize industry-specific and service-specific terms over broad marketing phrases.
-    7. Return ONLY the final list of SEO keywords, separated by commas (NO extra text).
-    8. Do NOT include generic items like "about", "contact", "blog", "home", "videos", "photos", "pages", "teams","podcasts" unless they are directly appended with service-specific terms.
+    7. Return ONLY the final list of SEO keywords, separated by commas (NO extra text). Additionally, prepend the extracted business type to the top of the list in the format: "Type: <extracted business type>", followed by a comma, then the rest of the keywords.
+    8. Do NOT include generic items like "about", "contact", "blog", "home", "videos", "photos", "pages", "teams", "podcasts" unless they are directly appended with service-specific terms.
+    9. Additionally, exclude keywords that are irrelevant to the core focus of the business. For example, if the determined business type is "Legal Operations Support", do not include keywords like "AI Insights", "US Openings", "UK Openings", or "Asia-Pacific Openings".
 
     Example Output:
-    keyword1, keyword2, keyword3, keyword4, keyword5
+    Type: Legal Operations Support, keyword1, keyword2, keyword3, keyword4
     """
     chat_response = openai_client.chat.completions.create(
         model="gpt-4",

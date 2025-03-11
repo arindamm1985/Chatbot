@@ -220,7 +220,7 @@ def generate_keywords(title: str, description: str, content: str):
     - "Maps" should become "Maps for business directory"
 
     Example Output:
-    Type: Business Directory Service, keyword1, keyword2, keyword3, keyword4
+    Business Directory Service, keyword1, keyword2, keyword3, keyword4
     """
     chat_response = openai_client.chat.completions.create(
         model="gpt-4",

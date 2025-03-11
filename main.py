@@ -24,6 +24,7 @@ from collections import Counter
 from sklearn.feature_extraction.text import TfidfVectorizer
 import io
 import pycurl
+import subprocess
 openai_client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 app = FastAPI() 
 app.add_middleware(
@@ -41,6 +42,12 @@ UNWANTED_PHRASES = {
     "why should", "why is", "how do", "can i", "is it", "best way to"
 }
 STOPWORDS = set(stopwords.words('english'))
+
+
+def fetch_with_curl(url):
+    command = ['curl', '-A', 'Mozilla/5.0', url]
+    result = subprocess.run(command, capture_output=True, text=True)
+    return result.stdout
 def fetch_with_pycurl(url):
     buffer = io.BytesIO()
     c = pycurl.Curl()
@@ -54,7 +61,7 @@ def fetch_with_pycurl(url):
     return body
 def fetch_clean_content(url: str):
     """ Fetches, cleans, and extracts readable content from a webpage. """
-    response_text = fetch_with_pycurl(url)
+    response_text = fetch_with_curl(url)
 
     soup = BeautifulSoup(response_text, 'html.parser')
 

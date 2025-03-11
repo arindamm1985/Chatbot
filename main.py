@@ -210,13 +210,14 @@ def generate_keywords(title: str, description: str, content: str):
     4. Do NOT include generic or vague terms like "real change," "navigate disruption," or "unlock growth" unless they are directly tied to a specific service or issue.
     5. Extract SEO keywords that real users would search for to find a business of this type.
     6. Prioritize industry-specific and service-specific terms over broad marketing phrases.
-    7. Return ONLY the final list of SEO keywords, separated by commas (NO extra text, explanation, or markers). Prepend the final output with the extracted business type as the first keyword. Do not include any "Part 1:" or "Part 2:" text in the final output.
+    7. Return ONLY the final list of the top 10 SEO keywords, separated by commas (NO extra text, explanation, or markers). Prepend the final output with the extracted business type as the first keyword. (The extracted business type counts as one of the top 10.)
     8. Do NOT include generic items like "about", "contact", "blog", "home", "videos", "photos", "pages", "teams", "podcasts" unless they are directly appended with service-specific terms.
     9. Exclude keywords that are irrelevant to the core focus of the business. For example, if the determined business type is "Digital Marketing and Branding Agency", do not include keywords like "job openings", "AI Insights", "US Openings", etc.
     10. If any generic keywords appear (e.g., "Browse States", "Listing Id.", "Directions", "Maps"), modify them to be industry-specific by incorporating the extracted business type.
 
     Example Output:
-    Digital Marketing and Branding Agency, keyword1, keyword2, keyword3, keyword4
+    Digital Marketing and Branding Agency, keyword1, keyword2, keyword3, keyword4, keyword5, keyword6, keyword7, keyword8, keyword9
+
     """
 
     chat_response = openai_client.chat.completions.create(

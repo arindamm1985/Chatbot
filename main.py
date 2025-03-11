@@ -125,7 +125,7 @@ def clean_keywords(keyword_string):
         re.sub(r"Business Type:\s*|SEO Keywords:\s*|Part 1:\s*|Part 2:\s*", "", keyword.strip(), flags=re.IGNORECASE)
         for keyword in keywords
     ]
-
+    cleaned_keywords[0] = cleaned_keywords[0].split("\n")[0].strip()
     # Join back the cleaned keywords into a comma-separated string
     return cleaned_keywords
 def summarize_text(text):

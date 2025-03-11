@@ -100,7 +100,7 @@ def fetch_clean_content(url: str):
         summary_parts.append(str(tag_copy))
 
     # Combine the parts in order to create the summary HTML.
-    page_summary_html = "\n".join(summary_parts)
+    page_summary_html = "<br/>".join(summary_parts)
 
     return {
         "title": title,

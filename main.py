@@ -112,6 +112,22 @@ def fetch_with_pycurl(url):
     
     body = buffer.getvalue().decode('utf-8')
     return body
+def clean_keywords(keyword_string):
+    """
+    Cleans a comma-separated list of keywords by removing unwanted prefixes
+    such as 'Business Type:', 'SEO Keywords:', 'Part 1:', and 'Part 2:'.
+    """
+    # Split the string into individual keywords
+    keywords = keyword_string.split(",")
+
+    # Clean each keyword using regex
+    cleaned_keywords = [
+        re.sub(r"Business Type:\s*|SEO Keywords:\s*|Part 1:\s*|Part 2:\s*", "", keyword.strip(), flags=re.IGNORECASE)
+        for keyword in keywords
+    ]
+
+    # Join back the cleaned keywords into a comma-separated string
+    return cleaned_keywords
 def summarize_text(text):
     """
     Dummy summarization function.
@@ -224,7 +240,7 @@ def generate_keywords(title: str, description: str, content: str):
         temperature=0.3
     )
 
-    keywords = chat_response.choices[0].message.content.strip()
+    keywords = clean_keywords(chat_response.choices[0].message.content.strip())
     
     updated_keywords = keywords.split(", ")
     return updated_keywords

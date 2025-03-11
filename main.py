@@ -80,7 +80,7 @@ def create_chatgpt_context(summary_html: str) -> str:
         if menu_lines:
             result_lines.append("Menu items:")
             result_lines.extend(menu_lines)
-            result_lines.append("")  # Blank line for separation
+            result_lines.append("")  # Blank line for separation 
 
     # Process headings as section titles and capture immediately following paragraphs as section content.
     for heading_tag in soup.find_all(["h1", "h2", "h3", "h4", "h5"]):

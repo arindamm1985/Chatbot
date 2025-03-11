@@ -201,7 +201,7 @@ def generate_keywords(title: str, description: str, content: str):
     Website Information:
     - Title: {title}
     - Description: {description}
-    - Content Excerpt: {content}
+    - Content Excerpt (use only the first 2000 characters): {content[:2000]}
 
     Instructions:
     1. Focus on the services offered, key issues, and industry-specific topics represented in the content excerpt.

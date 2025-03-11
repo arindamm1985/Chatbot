@@ -79,7 +79,7 @@ def fetch_clean_content(url: str):
     meta_description = meta_description["content"].strip() if meta_description else "N/A"
 
    # Remove non-content elements (keep header, footer, nav intact).
-    for tag in soup(['script', 'style', 'aside']):
+    for tag in soup(['script', 'style', 'aside','form','img']):
         tag.decompose()
 
     # Extract the full cleaned text from the page.

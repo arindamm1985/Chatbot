@@ -421,6 +421,7 @@ def fetch_keywords_endpoint(req: FetchRequest):
         "title": site_data["title"],
         "description": site_data["description"],
         "full_cleaned_content": site_data["full_cleaned_content"],
+        "full_summary": site_data["page_summary"],
         "generated_keywords": keywords
     }
 @app.post("/api/fetch")

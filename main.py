@@ -59,6 +59,13 @@ def fetch_with_pycurl(url):
     
     body = buffer.getvalue().decode('utf-8')
     return body
+def summarize_text(text):
+    """
+    Dummy summarization function.
+    Replace this with a call to ChatGPT's API to generate a summary.
+    For demonstration, it returns the first 200 characters (if available).
+    """
+    return text[:200] + "..." if len(text) > 200 else text
 def fetch_clean_content(url: str):
     """ Fetches, cleans, and extracts readable content from a webpage. """
     response_text = fetch_with_pycurl(url)
@@ -71,19 +78,42 @@ def fetch_clean_content(url: str):
     meta_description = meta_description["content"].strip() if meta_description else "N/A"
 
     # Remove unnecessary elements
-    for tag in soup(['script', 'style', 'header', 'footer', 'nav', 'aside']):
+    for tag in soup(['script', 'style', 'aside']):
         tag.decompose()
 
-    # Extract readable body content
+    # Extract the full cleaned text from the page body
     body_text = ' '.join(soup.stripped_strings)
-
-    # Clean and process text
     cleaned_text = clean_text(body_text)
+
+    # Generate a page summary by parsing inner sections of the body.
+    page_summary_html = ""
+    body_tag = soup.body
+    if body_tag:
+        # Find all inner divs and sections (recursively)
+        sections = body_tag.find_all(['div', 'section'])
+        for section in sections:
+            # Attempt to find a heading within the section
+            heading = None
+            for h_tag in section.find_all(['h1', 'h2', 'h3', 'h4', 'h5', 'h6']):
+                heading = h_tag.get_text(strip=True)
+                if heading:
+                    break
+            # If no heading is found, skip this section
+            if not heading:
+                continue
+
+            # Extract section text and summarize it using ChatGPT (or a placeholder function)
+            section_text = section.get_text(separator=' ', strip=True)
+            summary = summarize_text(section_text)
+
+            # Append the heading and summary to the page summary HTML string.
+            page_summary_html += f"<div><h2>{heading}</h2><p>{summary}</p></div>"
 
     return {
         "title": title,
         "description": meta_description,
-        "full_cleaned_content": cleaned_text
+        "full_cleaned_content": cleaned_text,
+        "page_summary": page_summary_html
     }
 def generate_keywords(title: str, description: str, content: str):
     """ Uses ChatGPT to generate relevant SEO keywords based on the website content. """

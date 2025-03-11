@@ -187,7 +187,7 @@ def generate_keywords(title: str, description: str, content: str):
     prompt = f"""
     You are an expert SEO strategist and an expert in identifying business types from website information.
 
-    Part 1: Identify the Business Type
+    First Identify the Business Type
     Please analyze the following website details and extract the primary business type (e.g., Legal Operations Support, Digital Marketing Agency, Business Directory Service, etc.) that best describes the business.
     Return only the business type as a short phrase.
 
@@ -195,7 +195,7 @@ def generate_keywords(title: str, description: str, content: str):
     - Title: {title}
     - Description: {description}
 
-    Part 2: Extract SEO Keywords
+    Next Extract SEO Keywords
     Using the business type you determined above, extract highly relevant SEO-friendly keywords from the website details. Tailor your keyword extraction to the identified business type.
 
     Website Information:

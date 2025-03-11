@@ -61,7 +61,7 @@ def fetch_with_pycurl(url):
     return body
 def fetch_clean_content(url: str):
     """ Fetches, cleans, and extracts readable content from a webpage. """
-    response_text = fetch_with_curl(url)
+    response_text = fetch_with_pycurl(url)
 
     soup = BeautifulSoup(response_text, 'html.parser')
 

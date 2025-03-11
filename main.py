@@ -226,7 +226,6 @@ def generate_keywords(title: str, description: str, content: str):
     keywords = chat_response.choices[0].message.content.strip()
     
     updated_keywords = keywords.split(", ")
-    updated_keywords.append("Type: "+extracted_business_type)
     return updated_keywords
     
 def clean_text(text: str):

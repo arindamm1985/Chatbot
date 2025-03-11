@@ -242,8 +242,8 @@ def generate_keywords(title: str, description: str, content: str):
 
     keywords = clean_keywords(chat_response.choices[0].message.content.strip())
     
-    updated_keywords = keywords.split(", ")
-    return updated_keywords
+
+    return keywords
     
 def clean_text(text: str):
     """ Cleans text by removing special characters, stopwords, and unnecessary spaces. """

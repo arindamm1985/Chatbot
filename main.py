@@ -190,19 +190,19 @@ def generate_keywords(title: str, description: str, content: str):
     **Website Information**
     - **Title**: {title}
     - **Description**: {description}
-    - **Content Excerpt**: {content[:1000]}  # Limiting content to first 1000 characters
+    - **Content Excerpt**: {content}
 
     **Instructions**:
-    1. **Focus only on the services offered and the key issues the website addresses**.
-    2. **Do NOT include generic or vague terms** like "real change," "navigate disruption," or "unlock growth" unless they are **directly tied to a service or issue**.
-    3. **Extract SEO keywords that real users would search for to find this business**.
-    4. **Prioritize industry-specific terms** over broad marketing phrases.
-    5. **Return ONLY the final list of SEO keywords, separated by commas (NO extra text).**
+    1. Focus on the services offered, key issues, and industry-specific topics represented in the content excerpt, which includes nested menu items.
+    2. Only consider those menu items that fall under categories like "services", "what we do", "what we offer", or "our products". Ignore other generic or navigational items (e.g. "Menu items", "Contact Us", "Who we are") that do not represent actual services or issues.
+    3. Deduplicate and consolidate similar terms.
+    4. Do NOT include generic or vague terms like "real change," "navigate disruption," or "unlock growth" unless they are directly tied to a specific service or issue.
+    5. Extract SEO keywords that real users would search for to find this business.
+    6. Prioritize industry-specific and service-specific terms over broad marketing phrases.
+    7. Return ONLY the final list of SEO keywords, separated by commas (NO extra text).
+
     Example Output:
     keyword1, keyword2, keyword3, keyword4, keyword5
-    Example of a good response:
-    - For a law firm: "corporate law services, business contract attorney, intellectual property lawyer, legal consulting firm"
-    - For a digital agency: "SEO optimization services, website design company, social media branding agency, PPC advertising firm"
     """
     chat_response = openai_client.chat.completions.create(
         model="gpt-4",
@@ -481,7 +481,7 @@ def fetch_keywords_endpoint(req: FetchRequest):
     if "error" in site_data:
         return site_data
 
-    keywords = generate_keywords(site_data["title"], site_data["description"], site_data["full_cleaned_content"])
+    keywords = generate_keywords(site_data["title"], site_data["description"], site_data["page_summary"])
 
     return {
         "title": site_data["title"],
@@ -502,7 +502,7 @@ def extract(req: FetchRequest):
         if "error" in site_data:
             return site_data
 
-        top_keywords = generate_keywords(site_data["title"], site_data["description"], site_data["full_cleaned_content"])
+        top_keywords = generate_keywords(site_data["title"], site_data["description"], site_data["page_summary"])
         title = site_data["title"]
         meta_description = site_data["description"]
        

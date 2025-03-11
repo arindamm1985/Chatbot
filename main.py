@@ -105,6 +105,7 @@ def fetch_with_pycurl(url):
     buffer = io.BytesIO()
     c = pycurl.Curl()
     c.setopt(c.URL, url)
+    c.setopt(pycurl.FOLLOWLOCATION, True)
     c.setopt(c.USERAGENT, 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.12; rv:55.0) Gecko/20100101 Firefox/55.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.93 Safari/537.36')
     c.setopt(c.WRITEDATA, buffer)
     c.perform()

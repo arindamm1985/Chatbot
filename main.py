@@ -11,6 +11,7 @@ from nltk import pos_tag, RegexpParser
 from fastapi import FastAPI, Query, Header, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 import os
+import copy
 import uvicorn
 from bs4 import BeautifulSoup
 from googlesearch import search  # Install with: pip install google
@@ -77,37 +78,29 @@ def fetch_clean_content(url: str):
     meta_description = soup.find("meta", attrs={"name": "description"})
     meta_description = meta_description["content"].strip() if meta_description else "N/A"
 
-    # Remove unnecessary elements
+    # Remove unnecessary elements (keep header, footer, nav intact).
     for tag in soup(['script', 'style', 'aside']):
         tag.decompose()
 
-    # Extract the full cleaned text from the page body
+    # Extract the full cleaned text from the page.
     body_text = ' '.join(soup.stripped_strings)
     cleaned_text = clean_text(body_text)
 
-    # Generate a page summary by parsing inner sections of the body.
-    page_summary_html = ""
-    body_tag = soup.body
-    if body_tag:
-        # Find all inner divs and sections (recursively)
-        sections = body_tag.find_all(['div', 'section'])
-        for section in sections:
-            # Attempt to find a heading within the section
-            heading = None
-            for h_tag in section.find_all(['h1', 'h2', 'h3', 'h4', 'h5', 'h6']):
-                heading = h_tag.get_text(strip=True)
-                if heading:
-                    break
-            # If no heading is found, skip this section
-            if not heading:
-                continue
+    # Define the tags we want to extract for the page summary.
+    tags_to_extract = ["p", "span", "h1", "h2", "h3", "h4", "h5", "ul","ol", "li", "a"]
+    summary_parts = []
 
-            # Extract section text and summarize it using ChatGPT (or a placeholder function)
-            section_text = section.get_text(separator=' ', strip=True)
-            summary = summarize_text(section_text)
+    # Search recursively in the full page (you can also limit to soup.body if desired)
+    for tag in soup.find_all(lambda t: t.name in tags_to_extract):
+        # Create a deep copy of the tag to avoid modifying the original soup.
+        tag_copy = copy.deepcopy(tag)
+        # Remove all attributes from the tag.
+        tag_copy.attrs = {}
+        # Append the cleaned tag's HTML.
+        summary_parts.append(str(tag_copy))
 
-            # Append the heading and summary to the page summary HTML string.
-            page_summary_html += f"<div><h2>{heading}</h2><p>{summary}</p></div>"
+    # Combine the parts in order to create the summary HTML.
+    summary_html = "\n".join(summary_parts)
 
     return {
         "title": title,

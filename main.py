@@ -200,6 +200,7 @@ def generate_keywords(title: str, description: str, content: str):
     5. Extract SEO keywords that real users would search for to find this business.
     6. Prioritize industry-specific and service-specific terms over broad marketing phrases.
     7. Return ONLY the final list of SEO keywords, separated by commas (NO extra text).
+    8. Do NOT include generic items like "about", "contact", "blog", "home", "videos", "photos", "pages", "teams","podcasts" unless they are directly appended with service-specific terms.
 
     Example Output:
     keyword1, keyword2, keyword3, keyword4, keyword5

@@ -44,7 +44,59 @@ UNWANTED_PHRASES = {
 }
 STOPWORDS = set(stopwords.words('english'))
 
+def process_list(ul_tag, indent=1):
+    """
+    Recursively processes a <ul> tag to extract list items.
+    Each list item is indented based on its depth.
+    """
+    lines = []
+    indent_str = "  " * indent
+    # Process only direct <li> children
+    for li in ul_tag.find_all("li", recursive=False):
+        # Get the text content of the list item (including nested text)
+        li_text = li.get_text(" ", strip=True)
+        if li_text:
+            lines.append(f"{indent_str}- {li_text}")
+        # Look for a nested <ul> inside the current <li>
+        nested_ul = li.find("ul")
+        if nested_ul:
+            lines.extend(process_list(nested_ul, indent=indent+1))
+    return lines
 
+def create_chatgpt_context(summary_html: str) -> str:
+    """
+    Processes the summary HTML and returns a plain text structured summary.
+    
+    The output organizes the content into:
+    - Menu items (from <ul> lists and their nested <li> items)
+    - Sections with titles and associated content (from headings and paragraphs)
+    """
+    soup = BeautifulSoup(summary_html, 'html.parser')
+    result_lines = []
+
+    # Process all <ul> tags for menu items
+    for ul in soup.find_all("ul"):
+        menu_lines = process_list(ul, indent=1)
+        if menu_lines:
+            result_lines.append("Menu items:")
+            result_lines.extend(menu_lines)
+            result_lines.append("")  # Blank line for separation
+
+    # Process headings as section titles and capture immediately following paragraphs as section content.
+    for heading_tag in soup.find_all(["h1", "h2", "h3", "h4", "h5"]):
+        heading_text = heading_tag.get_text(strip=True)
+        if heading_text:
+            result_lines.append(f"Section title: {heading_text}")
+            # Collect following sibling <p> tags until the next heading (or until no more siblings)
+            sibling = heading_tag.find_next_sibling()
+            while sibling and sibling.name == "p":
+                content_text = sibling.get_text(strip=True)
+                if content_text:
+                    result_lines.append(f"Section content: {content_text}")
+                sibling = sibling.find_next_sibling()
+            result_lines.append("")  # Blank line for separation
+
+    return "\n".join(result_lines)
 def fetch_with_curl(url):
     command = ['curl', '-A', 'Mozilla/5.0', url]
     result = subprocess.run(command, capture_output=True, text=True)
@@ -120,8 +172,8 @@ def fetch_clean_content(url: str):
         summary_parts.append(str(tag_copy))
 
     # Combine the parts in order to create the summary HTML.
-    page_summary_html = "\n".join(summary_parts)
-
+    page_summary = "\n".join(summary_parts)
+    page_summary_html = create_chatgpt_context(page_summary);
 
     return {
         "title": title,
